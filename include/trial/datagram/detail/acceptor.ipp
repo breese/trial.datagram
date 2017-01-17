@@ -47,7 +47,7 @@ void acceptor::async_accept(socket_type& socket,
          });
 }
 
-acceptor::endpoint_type acceptor::local_endpoint() const
+inline acceptor::endpoint_type acceptor::local_endpoint() const
 {
     assert(multiplexer);
 
