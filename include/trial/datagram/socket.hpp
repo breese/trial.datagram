@@ -83,7 +83,7 @@ public:
                CompletionToken&& token);
 
     endpoint_type local_endpoint() const;
-    // remote_endpoint() in socket_base
+    using detail::socket_base::remote_endpoint;
 
     template <typename SettableSocketOption>
     void set_option(const SettableSocketOption& option);
