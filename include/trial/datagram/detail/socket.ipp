@@ -42,7 +42,9 @@ inline socket::~socket()
     if (multiplexer)
     {
         multiplexer->remove(this);
-        get_service().remove(local_endpoint());
+        auto local = local_endpoint();
+        multiplexer.reset();
+        get_service().remove(local);
     }
 }
 
@@ -343,6 +345,19 @@ inline socket::endpoint_type socket::local_endpoint() const
     assert(multiplexer);
 
     return multiplexer->next_layer().local_endpoint();
+}
+
+inline void socket::cancel()
+{
+    while (!receive_input_queue.empty())
+    {
+        auto input = std::move(receive_input_queue.front());
+        receive_input_queue.pop();
+
+        invoke_handler(std::forward<decltype(std::get<1>(*input))>(std::get<1>(*input)),
+                       boost::asio::error::operation_aborted,
+                       0);
+    }
 }
 
 template <typename SettableSocketOption>

@@ -85,6 +85,8 @@ public:
     endpoint_type local_endpoint() const;
     using detail::socket_base::remote_endpoint;
 
+    void cancel();
+
     template <typename SettableSocketOption>
     void set_option(const SettableSocketOption& option);
 
