@@ -11,6 +11,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(trial.datagram CXX)
 
+set(TRIAL_DATAGRAM_EXAMPLE ON CACHE BOOL "Enable examples")
+
 set(TRIAL_DATAGRAM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set(TRIAL_DATAGRAM_BUILD_DIR ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${TRIAL_DATAGRAM_BUILD_DIR}/lib)
@@ -47,4 +49,6 @@ set(TRIAL_DATAGRAM_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(BEFORE include)
 
 # Examples
-add_subdirectory(example EXCLUDE_FROM_ALL)
+if (TRIAL_DATAGRAM_EXAMPLE)
+  add_subdirectory(example EXCLUDE_FROM_ALL)
+endif()
