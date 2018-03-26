@@ -8,7 +8,7 @@
 #
 ###############################################################################
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project(trial.datagram CXX)
 
 set(TRIAL_DATAGRAM_EXAMPLE ON CACHE BOOL "Enable examples")
@@ -44,9 +44,8 @@ set(TRIAL_DATAGRAM_DEPENDENT_LIBRARIES
 # trial.datagram package
 ###############################################################################
 
-set(TRIAL_DATAGRAM_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-
-include_directories(BEFORE include)
+add_library(trial-datagram INTERFACE)
+target_include_directories(trial-datagram INTERFACE "${TRIAL_DATAGRAM_ROOT}/include")
 
 # Examples
 if (TRIAL_DATAGRAM_EXAMPLE)
