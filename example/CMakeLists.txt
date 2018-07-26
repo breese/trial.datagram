@@ -14,7 +14,8 @@ target_link_libraries(async_echo_client trial-datagram ${TRIAL_DATAGRAM_DEPENDEN
 
 add_executable(spawn_echo_client
   spawn_echo_client.cpp
-)
+  )
+target_compile_options(spawn_echo_client PRIVATE -DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
 target_link_libraries(spawn_echo_client trial-datagram ${TRIAL_DATAGRAM_DEPENDENT_LIBRARIES})
 
 # Target
