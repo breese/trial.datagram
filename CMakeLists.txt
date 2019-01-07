@@ -51,5 +51,3 @@ target_include_directories(trial-datagram INTERFACE "${TRIAL_DATAGRAM_ROOT}/incl
 if (TRIAL_DATAGRAM_EXAMPLE)
   add_subdirectory(example EXCLUDE_FROM_ALL)
 endif()
-
-add_subdirectory(doc EXCLUDE_FROM_ALL)
