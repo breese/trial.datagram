@@ -30,7 +30,7 @@ endif()
 # Boost package
 ###############################################################################
 
-find_package(Boost 1.55.0 COMPONENTS coroutine context system thread)
+find_package(Boost 1.55.0 COMPONENTS system)
 if (NOT ${Boost_FOUND})
   message(FATAL_ERROR "${Boost_ERROR_REASON}")
 endif()
@@ -51,3 +51,5 @@ target_include_directories(trial-datagram INTERFACE "${TRIAL_DATAGRAM_ROOT}/incl
 if (TRIAL_DATAGRAM_EXAMPLE)
   add_subdirectory(example EXCLUDE_FROM_ALL)
 endif()
+
+add_subdirectory(doc EXCLUDE_FROM_ALL)
