@@ -12,7 +12,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <memory>
-#include <boost/asio/io_service.hpp>
+#include <trial/net/io_context.hpp>
 #include <trial/datagram/detail/service.hpp>
 #include <trial/datagram/endpoint.hpp>
 #include <trial/datagram/socket.hpp>
@@ -29,7 +29,7 @@ public:
     using endpoint_type = trial::datagram::endpoint;
     using socket_type = trial::datagram::socket;
 
-    acceptor(boost::asio::io_service& io,
+    acceptor(const net::executor&,
              endpoint_type local_endpoint);
 
     template <typename AcceptHandler>

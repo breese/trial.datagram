@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <functional>
+#include <trial/net/io_context.hpp>
 #include <boost/asio/spawn.hpp>
 #include <trial/datagram/socket.hpp>
 
@@ -14,14 +15,15 @@ int main(int argc, char *argv[])
     std::string host = argv[1];
     std::string port = argv[2];
 
-    boost::asio::io_service io;
+    trial::net::io_context io;
 
     boost::asio::spawn
         (io,
          [&io, host, port] (boost::asio::yield_context yield)
          {
              trial::datagram::endpoint local_endpoint(trial::datagram::protocol::v4(), 0);
-             trial::datagram::socket socket(io, local_endpoint);
+             trial::datagram::socket socket(trial::net::get_executor(io),
+                                            local_endpoint);
 
              boost::system::error_code error;
              socket.async_connect(host, port, yield[error]);

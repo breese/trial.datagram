@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <boost/version.hpp>
+#include <trial/net/io_context.hpp>
 #include <boost/asio/connect.hpp>
 #include <trial/datagram/socket.hpp>
 
@@ -10,10 +12,10 @@ class client
     using message_type = std::vector<char>;
 
 public:
-    client(boost::asio::io_service& io,
+    client(trial::net::io_context& io,
            const std::string& host,
            const std::string& service)
-        : socket(io,
+        : socket(trial::net::get_executor(io),
                  trial::datagram::endpoint(boost::asio::ip::udp::v4(), 0)),
           counter(4)
     {
@@ -85,7 +87,7 @@ int main(int argc, char *argv[])
         std::cerr << "Usage: " << argv[0] << " <host> <port>" << std::endl;
         return 1;
     }
-    boost::asio::io_service io;
+    trial::net::io_context io;
     client c(io, argv[1], argv[2]);
     io.run();
     return 0;

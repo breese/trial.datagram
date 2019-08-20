@@ -21,11 +21,12 @@ namespace detail
 {
 
 template <typename Protocol>
-boost::asio::io_service::id service<Protocol>::id;
+net::io_context::id service<Protocol>::id;
 
 template <typename Protocol>
-service<Protocol>::service(boost::asio::io_service& io)
-    : boost::asio::io_service::service(io)
+service<Protocol>::service(net::io_context& io)
+    : net::io_context::service(io),
+      context(io)
 {
 }
 
@@ -39,7 +40,7 @@ std::shared_ptr<detail::multiplexer> service<Protocol>::add(const endpoint_type&
     if ((where == multiplexers.end()) || (multiplexers.key_comp()(local_endpoint, where->first)))
     {
         // Multiplexer for local endpoint does not exists
-        result = std::move(detail::multiplexer::create(std::ref(get_io_service()),
+        result = std::move(detail::multiplexer::create(net::get_executor(context),
                                                        local_endpoint));
         where = multiplexers.insert(
             where,
@@ -52,7 +53,7 @@ std::shared_ptr<detail::multiplexer> service<Protocol>::add(const endpoint_type&
         {
             // This can happen if an acceptor has failed
             // Reassign if empty
-            result = std::move(detail::multiplexer::create(std::ref(get_io_service()),
+            result = std::move(detail::multiplexer::create(net::get_executor(context),
                                                            local_endpoint));
             where->second = result;
         }

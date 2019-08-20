@@ -30,9 +30,10 @@ std::unique_ptr<multiplexer> multiplexer::create(Types&&... args)
     return self;
 }
 
-inline multiplexer::multiplexer(boost::asio::io_service& io,
-                                endpoint_type local_endpoint)
-    : real_socket(io, local_endpoint),
+inline multiplexer::multiplexer(const net::executor& executor,
+                                const endpoint_type& local_endpoint)
+    : executor(executor),
+      real_socket(executor, local_endpoint),
       pending_receive_count(0)
 {
 }
@@ -65,7 +66,8 @@ inline void multiplexer::remove(socket_base *socket)
         if (std::get<0>(**it) == socket)
         {
             auto handler = std::get<1>(**it);
-            next_layer().get_io_service().post(
+            net::post(
+                executor,
                 [handler]
                 {
                     handler(boost::asio::error::make_error_code(boost::asio::error::operation_aborted));
@@ -95,7 +97,8 @@ void multiplexer::async_accept(SocketType& socket,
     }
     else
     {
-        next_layer().get_io_service().post(
+        net::post(
+            net::get_executor(next_layer()),
             [this, &socket, handler]
             {
                 assert(!listen_queue.empty());
@@ -122,22 +125,15 @@ void multiplexer::async_accept(SocketType& socket,
 
 template <typename ConstBufferSequence,
           typename CompletionToken>
-typename boost::asio::async_result<
-    typename boost::asio::handler_type<CompletionToken,
-                                       void(boost::system::error_code, std::size_t)>::type
-    >::type
-multiplexer::async_send_to(const ConstBufferSequence& buffers,
-                           const endpoint_type& endpoint,
-                           CompletionToken&& token)
+auto multiplexer::async_send_to(const ConstBufferSequence& buffers,
+                                const endpoint_type& endpoint,
+                                CompletionToken&& token) -> typename net::async_result_t<CompletionToken, void(boost::system::error_code, std::size_t)>
 {
-    typename boost::asio::handler_type<CompletionToken,
-                                       void(boost::system::error_code, std::size_t)>::type
-        handler(std::forward<CompletionToken>(token));
-    boost::asio::async_result<decltype(handler)> result(handler);
+    net::async_completion<CompletionToken, void(boost::system::error_code, std::size_t)> async(token);
     next_layer().async_send_to(buffers,
                                endpoint,
-                               std::forward<decltype(handler)>(handler));
-    return result.get();
+                               std::forward<decltype(async.completion_handler)>(async.completion_handler));
+    return async.result.get();
 }
 
 inline void multiplexer::start_receive()

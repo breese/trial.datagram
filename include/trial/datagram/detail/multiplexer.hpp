@@ -18,8 +18,9 @@
 #include <tuple>
 #include <map>
 #include <boost/asio/placeholders.hpp>
-#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <trial/net/io_context.hpp>
+#include <trial/net/async_result.hpp>
 #include <trial/datagram/detail/buffer.hpp>
 
 namespace trial
@@ -60,13 +61,9 @@ public:
 
     template <typename ConstBufferSequence,
               typename CompletionToken>
-    typename boost::asio::async_result<
-        typename boost::asio::handler_type<CompletionToken,
-                                           void(boost::system::error_code, std::size_t)>::type
-        >::type
-    async_send_to(const ConstBufferSequence& buffers,
+    auto async_send_to(const ConstBufferSequence& buffers,
                        const endpoint_type& endpoint,
-                       CompletionToken&& token);
+                       CompletionToken&& token) -> typename net::async_result_t<CompletionToken, void(boost::system::error_code, std::size_t)>;
 
     void start_receive();
 
@@ -74,8 +71,8 @@ public:
     next_layer_type& next_layer();
 
 private:
-    multiplexer(boost::asio::io_service& io,
-                endpoint_type local_endpoint);
+    multiplexer(const net::executor&,
+                const endpoint_type& local_endpoint);
 
     void do_start_receive();
 
@@ -84,6 +81,7 @@ private:
                          const endpoint_type&);
 
 private:
+    net::executor executor;
     next_layer_type real_socket;
 
     using socket_map = std::map<endpoint_type, socket_base *>;

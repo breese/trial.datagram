@@ -20,9 +20,9 @@ namespace trial
 namespace datagram
 {
 
-inline acceptor::acceptor(boost::asio::io_service& io,
+inline acceptor::acceptor(const net::executor& executor,
                           endpoint_type local_endpoint)
-    : boost::asio::basic_io_object<detail::service<protocol>>(io),
+    : boost::asio::basic_io_object<detail::service<protocol>>(net::get_context(executor)),
       multiplexer(get_service().add(local_endpoint))
 {
 }

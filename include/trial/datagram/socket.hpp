@@ -16,8 +16,9 @@
 #include <tuple>
 #include <queue>
 #include <boost/asio/basic_io_object.hpp>
-#include <boost/asio/async_result.hpp>
 #include <boost/asio/ip/udp.hpp> // resolver
+#include <trial/net/io_context.hpp>
+#include <trial/net/async_result.hpp>
 #include <trial/datagram/detail/socket_base.hpp>
 #include <trial/datagram/detail/service.hpp>
 #include <trial/datagram/endpoint.hpp>
@@ -40,47 +41,31 @@ class socket
 public:
     socket(socket&&);
 
-    socket(boost::asio::io_service& io);
+    socket(const net::executor&);
 
-    socket(boost::asio::io_service& io,
+    socket(const net::executor&,
            const endpoint_type& local_endpoint);
 
     virtual ~socket();
 
     template <typename CompletionToken>
-    typename boost::asio::async_result<
-        typename boost::asio::handler_type<CompletionToken,
-                                           void(boost::system::error_code)>::type
-        >::type
-    async_connect(const endpoint_type& remote_endpoint,
-                  CompletionToken&& token);
+    auto async_connect(const endpoint_type& remote_endpoint,
+                       CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code)>;
 
     template <typename CompletionToken>
-    typename boost::asio::async_result<
-        typename boost::asio::handler_type<CompletionToken,
-                                           void(boost::system::error_code)>::type
-        >::type
-    async_connect(const std::string& remote_host,
-                  const std::string& remote_service,
-                  CompletionToken&& token);
+    auto async_connect(const std::string& remote_host,
+                       const std::string& remote_service,
+                       CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code)>;
 
     template <typename MutableBufferSequence,
               typename CompletionToken>
-    typename boost::asio::async_result<
-        typename boost::asio::handler_type<CompletionToken,
-                                           void(boost::system::error_code, std::size_t)>::type
-        >::type
-    async_receive(const MutableBufferSequence& buffers,
-                  CompletionToken&& token);
+    auto async_receive(const MutableBufferSequence& buffers,
+                       CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code, std::size_t)>;
 
     template <typename ConstBufferSequence,
               typename CompletionToken>
-    typename boost::asio::async_result<
-        typename boost::asio::handler_type<CompletionToken,
-                                           void(boost::system::error_code, std::size_t)>::type
-        >::type
-    async_send(const ConstBufferSequence& buffers,
-               CompletionToken&& token);
+    auto async_send(const ConstBufferSequence& buffers,
+                    CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code, std::size_t)>;
 
     endpoint_type local_endpoint() const;
     using detail::socket_base::remote_endpoint;

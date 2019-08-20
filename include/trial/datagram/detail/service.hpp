@@ -14,7 +14,7 @@
 #include <memory>
 #include <map>
 #include <mutex>
-#include <boost/asio/io_service.hpp>
+#include <trial/net/io_context.hpp>
 #include <trial/datagram/endpoint.hpp>
 
 namespace trial
@@ -31,14 +31,14 @@ class multiplexer;
 
 template <typename Protocol>
 class service
-    : public boost::asio::io_service::service
+    : public net::io_context::service
 {
     using endpoint_type = trial::datagram::endpoint;
 
 public:
-    static boost::asio::io_service::id id;
+    static net::io_context::id id;
 
-    explicit service(boost::asio::io_service& io);
+    explicit service(net::io_context& io);
 
     // Get or create the multiplexer that owns a local endpoint
     std::shared_ptr<detail::multiplexer> add(const endpoint_type& local_endpoint);
@@ -56,6 +56,7 @@ private:
     virtual void shutdown_service() override {};
 
 private:
+    net::io_context& context;
     std::mutex mutex;
     std::map< endpoint_type, std::weak_ptr<detail::multiplexer> > multiplexers;
 };

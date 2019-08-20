@@ -11,7 +11,8 @@
 #include <algorithm>
 #include <functional>
 #include <boost/asio/error.hpp>
-#include <boost/asio/io_service.hpp>
+#include <trial/net/async_result.hpp>
+#include <trial/net/async_resolve.hpp>
 #include <trial/datagram/detail/multiplexer.hpp>
 
 namespace trial
@@ -25,14 +26,14 @@ inline socket::socket(socket&& other)
 {
 }
 
-inline socket::socket(boost::asio::io_service& io)
-    : boost::asio::basic_io_object<service_type>(io)
+inline socket::socket(const net::executor& executor)
+    : boost::asio::basic_io_object<service_type>(net::get_context(executor))
 {
 }
 
-inline socket::socket(boost::asio::io_service& io,
+inline socket::socket(const net::executor& executor,
                       const endpoint_type& local_endpoint)
-    : boost::asio::basic_io_object<service_type>(io),
+    : boost::asio::basic_io_object<service_type>(net::get_context(executor)),
       multiplexer(get_service().add(local_endpoint))
 {
 }
@@ -49,17 +50,11 @@ inline socket::~socket()
 }
 
 template <typename CompletionToken>
-typename boost::asio::async_result<
-    typename boost::asio::handler_type<CompletionToken,
-                                       void(boost::system::error_code)>::type
-    >::type
-socket::async_connect(const endpoint_type& remote_endpoint,
-                      CompletionToken&& token)
+auto socket::async_connect(const endpoint_type& remote_endpoint,
+                           CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code)>
 {
-    using handler_type = typename boost::asio::handler_type<CompletionToken,
-                                                            void(boost::system::error_code)>::type;
-    handler_type handler(std::forward<decltype(token)>(token));
-    boost::asio::async_result<decltype(handler)> result(handler);
+    net::async_completion<CompletionToken, void(boost::system::error_code, std::size_t)> async(token);
+    auto&& handler = async.completion_handler;
 
     if (!multiplexer)
     {
@@ -78,7 +73,7 @@ socket::async_connect(const endpoint_type& remote_endpoint,
                                       std::forward<decltype(handler)>(handler));
             });
     }
-    return result.get();
+    return async.result.get();
 }
 
 template <typename ConnectHandler>
@@ -97,18 +92,12 @@ void socket::process_connect(const boost::system::error_code& error,
 }
 
 template <typename CompletionToken>
-typename boost::asio::async_result<
-    typename boost::asio::handler_type<CompletionToken,
-                                       void(boost::system::error_code)>::type
-    >::type
-socket::async_connect(const std::string& host,
-                      const std::string& service,
-                      CompletionToken&& token)
+auto socket::async_connect(const std::string& host,
+                           const std::string& service,
+                           CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code)>
 {
-    using handler_type = typename boost::asio::handler_type<CompletionToken,
-                                                            void(boost::system::error_code)>::type;
-    handler_type handler(std::forward<decltype(token)>(token));
-    boost::asio::async_result<decltype(handler)> result(handler);
+    net::async_completion<CompletionToken, void(boost::system::error_code)> async(token);
+    auto&& handler = async.completion_handler;
 
     if (!multiplexer)
     {
@@ -119,10 +108,11 @@ socket::async_connect(const std::string& host,
     else
     {
         std::shared_ptr<resolver_type> resolver
-            = std::make_shared<resolver_type>(std::ref(get_io_service()));
-        resolver_type::query query(host, service);
-        resolver->async_resolve(
-            query,
+            = std::make_shared<resolver_type>(get_io_service());
+        net::async_resolve(
+            resolver,
+            host,
+            service,
             [this, handler, resolver]
             (const boost::system::error_code& error, resolver_type::iterator where) mutable
             {
@@ -137,7 +127,7 @@ socket::async_connect(const std::string& host,
                  }
              });
     }
-    return result.get();
+    return async.result.get();
 }
 
 template <typename ConnectHandler>
@@ -185,17 +175,11 @@ void socket::process_next_connect(const boost::system::error_code& error,
 
 template <typename MutableBufferSequence,
           typename CompletionToken>
-typename boost::asio::async_result<
-    typename boost::asio::handler_type<CompletionToken,
-                                       void(boost::system::error_code, std::size_t)>::type
-    >::type
-socket::async_receive(const MutableBufferSequence& buffers,
-                      CompletionToken&& token)
+auto socket::async_receive(const MutableBufferSequence& buffers,
+                           CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code, std::size_t)>
 {
-    using handler_type = typename boost::asio::handler_type<CompletionToken,
-                                                            void(boost::system::error_code, std::size_t)>::type;
-    handler_type handler(std::forward<decltype(token)>(token));
-    boost::asio::async_result<decltype(handler)> result(handler);
+    net::async_completion<CompletionToken, void(boost::system::error_code, std::size_t)> async(token);
+    auto&& handler = async.completion_handler;
 
     if (!multiplexer)
     {
@@ -209,7 +193,7 @@ socket::async_receive(const MutableBufferSequence& buffers,
         {
             std::unique_ptr<receive_input_type> operation(
                 new receive_input_type(buffers,
-                                       std::move(handler)));
+                                       std::forward<decltype(handler)>(handler)));
             receive_input_queue.emplace(std::move(operation));
 
             multiplexer->start_receive();
@@ -229,7 +213,7 @@ socket::async_receive(const MutableBufferSequence& buffers,
                 });
         }
     }
-    return result.get();
+    return async.result.get();
 }
 
 template <typename MutableBufferSequence,
@@ -251,17 +235,11 @@ void socket::process_receive(const boost::system::error_code& error,
 
 template <typename ConstBufferSequence,
           typename CompletionToken>
-typename boost::asio::async_result<
-    typename boost::asio::handler_type<CompletionToken,
-                                       void(boost::system::error_code, std::size_t)>::type
-    >::type
-socket::async_send(const ConstBufferSequence& buffers,
-                   CompletionToken&& token)
+auto socket::async_send(const ConstBufferSequence& buffers,
+                        CompletionToken&& token) -> net::async_result_t<CompletionToken, void(boost::system::error_code, std::size_t)>
 {
-    using handler_type = typename boost::asio::handler_type<CompletionToken,
-                                                            void(boost::system::error_code, std::size_t)>::type;
-    handler_type handler(std::forward<decltype(token)>(token));
-    boost::asio::async_result<decltype(handler)> result(handler);
+    net::async_completion<CompletionToken, void(boost::system::error_code, std::size_t)> async(token);
+    auto&& handler = async.completion_handler;
 
     if (!multiplexer)
     {
@@ -281,7 +259,7 @@ socket::async_send(const ConstBufferSequence& buffers,
                 handler(error, length);
             });
     }
-    return result.get();
+    return async.result.get();
 }
 
 template <typename Handler,

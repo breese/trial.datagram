@@ -2,7 +2,8 @@
 #include <memory>
 #include <functional>
 #include <vector>
-#include <boost/asio.hpp>
+#include <boost/asio/buffer.hpp>
+#include <trial/net/io_context.hpp>
 #include <trial/datagram/acceptor.hpp>
 #include <trial/datagram/socket.hpp>
 
@@ -62,9 +63,9 @@ private:
 class server
 {
 public:
-    server(boost::asio::io_service& io,
+    server(trial::net::io_context& io,
            const trial::datagram::endpoint& local_endpoint)
-        : acceptor(io, local_endpoint)
+        : acceptor(trial::net::get_executor(io), local_endpoint)
     {
         do_accept();
     }
@@ -76,7 +77,7 @@ public:
 private:
     void do_accept()
     {
-        auto socket = std::make_shared<trial::datagram::socket>(acceptor.get_io_service());
+        auto socket = std::make_shared<trial::datagram::socket>(trial::net::get_executor(acceptor));
         acceptor.async_accept(*socket,
                               [this, socket] (boost::system::error_code error)
                               {
@@ -100,7 +101,7 @@ int main(int argc, char *argv[])
         std::cerr << "Usage: " << argv[0] << " <port>" << std::endl;
         return 1;
     }
-    boost::asio::io_service io;
+    trial::net::io_context io;
     trial::datagram::endpoint endpoint(trial::datagram::protocol::v4(),
                                        std::atoi(argv[1]));
     server s(io, endpoint);
