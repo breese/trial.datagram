@@ -27,18 +27,10 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 ###############################################################################
-# Boost package
+# External packages
 ###############################################################################
 
-find_package(Boost 1.55.0 COMPONENTS system)
-if (NOT ${Boost_FOUND})
-  message(FATAL_ERROR "${Boost_ERROR_REASON}")
-endif()
-
-include_directories(BEFORE ${Boost_INCLUDE_DIR})
-
-set(TRIAL_DATAGRAM_DEPENDENT_LIBRARIES
-  ${Boost_LIBRARIES})
+add_subdirectory(external)
 
 ###############################################################################
 # trial.datagram package
@@ -46,6 +38,7 @@ set(TRIAL_DATAGRAM_DEPENDENT_LIBRARIES
 
 add_library(trial-datagram INTERFACE)
 target_include_directories(trial-datagram INTERFACE "${TRIAL_DATAGRAM_ROOT}/include")
+target_link_libraries(trial-datagram INTERFACE Trial::Net)
 
 # Examples
 if (TRIAL_DATAGRAM_EXAMPLE)

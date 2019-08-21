@@ -1,0 +1,3 @@
+[submodule "external/trial.net"]
+	path = external/trial.net
+	url = http://github.com/breese/trial.net.git
