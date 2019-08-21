@@ -64,7 +64,8 @@ auto socket::async_connect(const endpoint_type& remote_endpoint,
     }
     else
     {
-        get_io_service().post(
+        net::post(
+            net::get_executor(*this),
             [this, remote_endpoint, handler] () mutable
             {
                 boost::system::error_code success;
@@ -108,7 +109,7 @@ auto socket::async_connect(const std::string& host,
     else
     {
         std::shared_ptr<resolver_type> resolver
-            = std::make_shared<resolver_type>(get_io_service());
+            = std::make_shared<resolver_type>(net::get_executor(*this));
         net::async_resolve(
             resolver,
             host,
@@ -200,7 +201,8 @@ auto socket::async_receive(const MutableBufferSequence& buffers,
         }
         else
         {
-            get_io_service().post(
+            net::post(
+                net::get_executor(*this),
                 [this, buffers, handler] () mutable
                 {
                     auto output = std::move(this->receive_output_queue.front());
@@ -269,7 +271,8 @@ void socket::invoke_handler(Handler&& handler,
 {
     assert(error);
 
-    get_io_service().post(
+    net::post(
+        net::get_executor(*this),
         [handler, error]() mutable
         {
             handler(boost::asio::error::make_error_code(error));
@@ -284,7 +287,8 @@ void socket::invoke_handler(Handler&& handler,
 {
     assert(error);
 
-    get_io_service().post(
+    net::post(
+        net::get_executor(*this),
         [handler, error, size]() mutable
         {
             handler(boost::asio::error::make_error_code(error), size);
