@@ -22,7 +22,7 @@ namespace datagram
 
 inline acceptor::acceptor(const net::executor& executor,
                           endpoint_type local_endpoint)
-    : boost::asio::basic_io_object<detail::service<protocol>>(net::get_context(executor)),
+    : boost::asio::basic_io_object<detail::service<protocol>>(static_cast<net::io_context&>(executor.context())),
       multiplexer(get_service().add(local_endpoint))
 {
 }

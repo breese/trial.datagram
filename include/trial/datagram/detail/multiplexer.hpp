@@ -19,8 +19,7 @@
 #include <map>
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/ip/udp.hpp>
-#include <trial/net/io_context.hpp>
-#include <trial/net/async_result.hpp>
+#include <trial/net/executor.hpp>
 #include <trial/datagram/detail/buffer.hpp>
 
 namespace trial

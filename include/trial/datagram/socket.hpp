@@ -18,7 +18,7 @@
 #include <boost/asio/basic_io_object.hpp>
 #include <boost/asio/ip/udp.hpp> // resolver
 #include <trial/net/io_context.hpp>
-#include <trial/net/async_result.hpp>
+#include <trial/net/executor.hpp>
 #include <trial/datagram/detail/socket_base.hpp>
 #include <trial/datagram/detail/service.hpp>
 #include <trial/datagram/endpoint.hpp>

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
          [&io, host, port] (boost::asio::yield_context yield)
          {
              trial::datagram::endpoint local_endpoint(trial::datagram::protocol::v4(), 0);
-             trial::datagram::socket socket(trial::net::get_executor(io),
+             trial::datagram::socket socket(trial::net::extension::get_executor(io),
                                             local_endpoint);
 
              boost::system::error_code error;

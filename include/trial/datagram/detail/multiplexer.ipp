@@ -98,7 +98,7 @@ void multiplexer::async_accept(SocketType& socket,
     else
     {
         net::post(
-            net::get_executor(next_layer()),
+            net::extension::get_executor(next_layer()),
             [this, &socket, handler]
             {
                 assert(!listen_queue.empty());

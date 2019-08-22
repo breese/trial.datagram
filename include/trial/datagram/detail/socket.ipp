@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <functional>
 #include <boost/asio/error.hpp>
-#include <trial/net/async_result.hpp>
+#include <trial/net/executor.hpp>
 #include <trial/net/async_resolve.hpp>
 #include <trial/datagram/detail/multiplexer.hpp>
 
@@ -27,13 +27,13 @@ inline socket::socket(socket&& other)
 }
 
 inline socket::socket(const net::executor& executor)
-    : boost::asio::basic_io_object<service_type>(net::get_context(executor))
+    : boost::asio::basic_io_object<service_type>(static_cast<net::io_context&>(executor.context()))
 {
 }
 
 inline socket::socket(const net::executor& executor,
                       const endpoint_type& local_endpoint)
-    : boost::asio::basic_io_object<service_type>(net::get_context(executor)),
+    : boost::asio::basic_io_object<service_type>(static_cast<net::io_context&>(executor.context())),
       multiplexer(get_service().add(local_endpoint))
 {
 }
@@ -65,7 +65,7 @@ auto socket::async_connect(const endpoint_type& remote_endpoint,
     else
     {
         net::post(
-            net::get_executor(*this),
+            net::extension::get_executor(*this),
             [this, remote_endpoint, handler] () mutable
             {
                 boost::system::error_code success;
@@ -109,7 +109,7 @@ auto socket::async_connect(const std::string& host,
     else
     {
         std::shared_ptr<resolver_type> resolver
-            = std::make_shared<resolver_type>(net::get_executor(*this));
+            = std::make_shared<resolver_type>(net::extension::get_executor(*this));
         net::async_resolve(
             resolver,
             host,
@@ -202,7 +202,7 @@ auto socket::async_receive(const MutableBufferSequence& buffers,
         else
         {
             net::post(
-                net::get_executor(*this),
+                net::extension::get_executor(*this),
                 [this, buffers, handler] () mutable
                 {
                     auto output = std::move(this->receive_output_queue.front());
@@ -272,7 +272,7 @@ void socket::invoke_handler(Handler&& handler,
     assert(error);
 
     net::post(
-        net::get_executor(*this),
+        net::extension::get_executor(*this),
         [handler, error]() mutable
         {
             handler(boost::asio::error::make_error_code(error));
@@ -288,7 +288,7 @@ void socket::invoke_handler(Handler&& handler,
     assert(error);
 
     net::post(
-        net::get_executor(*this),
+        net::extension::get_executor(*this),
         [handler, error, size]() mutable
         {
             handler(boost::asio::error::make_error_code(error), size);

@@ -40,7 +40,7 @@ std::shared_ptr<detail::multiplexer> service<Protocol>::add(const endpoint_type&
     if ((where == multiplexers.end()) || (multiplexers.key_comp()(local_endpoint, where->first)))
     {
         // Multiplexer for local endpoint does not exists
-        result = std::move(detail::multiplexer::create(net::get_executor(context),
+        result = std::move(detail::multiplexer::create(net::extension::get_executor(context),
                                                        local_endpoint));
         where = multiplexers.insert(
             where,
@@ -53,7 +53,7 @@ std::shared_ptr<detail::multiplexer> service<Protocol>::add(const endpoint_type&
         {
             // This can happen if an acceptor has failed
             // Reassign if empty
-            result = std::move(detail::multiplexer::create(net::get_executor(context),
+            result = std::move(detail::multiplexer::create(net::extension::get_executor(context),
                                                            local_endpoint));
             where->second = result;
         }

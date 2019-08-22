@@ -65,7 +65,7 @@ class server
 public:
     server(trial::net::io_context& io,
            const trial::datagram::endpoint& local_endpoint)
-        : acceptor(trial::net::get_executor(io), local_endpoint)
+        : acceptor(trial::net::extension::get_executor(io), local_endpoint)
     {
         do_accept();
     }
@@ -77,7 +77,7 @@ public:
 private:
     void do_accept()
     {
-        auto socket = std::make_shared<trial::datagram::socket>(trial::net::get_executor(acceptor));
+        auto socket = std::make_shared<trial::datagram::socket>(trial::net::extension::get_executor(acceptor));
         acceptor.async_accept(*socket,
                               [this, socket] (boost::system::error_code error)
                               {

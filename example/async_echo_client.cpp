@@ -15,7 +15,7 @@ public:
     client(trial::net::io_context& io,
            const std::string& host,
            const std::string& service)
-        : socket(trial::net::get_executor(io),
+        : socket(trial::net::extension::get_executor(io),
                  trial::datagram::endpoint(boost::asio::ip::udp::v4(), 0)),
           counter(4)
     {
