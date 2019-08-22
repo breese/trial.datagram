@@ -12,7 +12,7 @@
 #include <functional>
 #include <boost/asio/error.hpp>
 #include <trial/net/executor.hpp>
-#include <trial/net/async_resolve.hpp>
+#include <trial/net/internet.hpp>
 #include <trial/datagram/detail/multiplexer.hpp>
 
 namespace trial
@@ -110,7 +110,7 @@ auto socket::async_connect(const std::string& host,
     {
         std::shared_ptr<resolver_type> resolver
             = std::make_shared<resolver_type>(net::extension::get_executor(*this));
-        net::async_resolve(
+        net::extension::async_resolve(
             resolver,
             host,
             service,
