@@ -95,6 +95,8 @@ private:
     // FIXME: Bounded queue? (like listen() backlog)
     using accept_output_type = std::tuple<boost::system::error_code, std::unique_ptr<buffer_type>, endpoint_type>;
     std::deque<std::unique_ptr<accept_output_type>> listen_queue;
+
+    std::uint8_t peek[1];
 };
 
 } // namespace detail

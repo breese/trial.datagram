@@ -152,19 +152,22 @@ inline void multiplexer::do_start_receive()
     // the surplus bytes will be lost. So instead we first query the size
     // asynchronously and then allocate a buffer of the appropriate size
     // which the datagram is read synchronously into.
+    //
+    // The peek buffer is a workaround of OSX, which calls the handler
+    // immediately if passed a zero-sized buffer.
 
     auto remote_endpoint = std::make_shared<endpoint_type>();
     auto self = shared_from_this();
     next_layer().async_receive_from(
-        boost::asio::buffer(boost::asio::mutable_buffer()),
+        boost::asio::buffer(peek),
         *remote_endpoint,
         next_layer_type::message_peek,
         [this, self, remote_endpoint] (boost::system::error_code error, std::size_t) mutable
         {
             if (!error)
             {
-                // The size_t parameter is always zero so we must query the
-                // datagram size.
+                // The size_t parameter is determined by the peek buffer so we
+                // must query the actual datagram size.
                 next_layer_type::bytes_readable readable(true);
                 next_layer().io_control(readable, error);
                 if (!error)
