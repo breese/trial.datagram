@@ -14,6 +14,7 @@
 #include <cassert>
 #include <utility>
 #include <functional>
+#include <iostream>
 
 namespace trial
 {
@@ -45,6 +46,20 @@ void acceptor::async_accept(socket_type& socket,
              }
              handler(error);
          });
+}
+
+template <typename MoveAcceptHandler>
+void acceptor::async_accept(MoveAcceptHandler&& handler) {
+
+    auto socket = std::make_shared<socket_type>(get_executor());
+
+    this->async_accept
+        (*socket,
+         [socket, handler]
+         (const boost::system::error_code &error) {
+            std::cout << "Accepted" << std::endl;
+        handler(error, std::move(*socket));
+    });
 }
 
 inline acceptor::endpoint_type acceptor::local_endpoint() const

@@ -36,6 +36,9 @@ public:
     void async_accept(socket_type& socket,
                       AcceptHandler&& handler);
 
+    template <typename MoveAcceptHandler>
+    void async_accept(MoveAcceptHandler&& handler);
+
     endpoint_type local_endpoint() const;
 
 private:

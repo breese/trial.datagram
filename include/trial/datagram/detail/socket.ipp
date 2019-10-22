@@ -8,6 +8,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
 #include <algorithm>
 #include <functional>
 #include <boost/asio/error.hpp>
@@ -21,14 +22,16 @@ namespace datagram
 {
 
 inline socket::socket(socket&& other)
-    : basic_io_object<service_type>(std::forward<decltype(other)>(other)),
-      multiplexer(other.multiplexer)
+    : basic_io_object<service_type>(std::move(other)),
+      multiplexer(std::move(other.multiplexer))
 {
+    std::cout << "socket::socket(socket&& other), this=" << (void *)this << " other=" << &other << std::endl;
 }
 
 inline socket::socket(const net::executor& executor)
     : boost::asio::basic_io_object<service_type>(static_cast<net::io_context&>(executor.context()))
 {
+    std::cout << "socket::socket() this=" << (void *)this << std::endl;
 }
 
 inline socket::socket(const net::executor& executor,
@@ -36,10 +39,12 @@ inline socket::socket(const net::executor& executor,
     : boost::asio::basic_io_object<service_type>(static_cast<net::io_context&>(executor.context())),
       multiplexer(get_service().add(local_endpoint))
 {
+    std::cout << "socket::socket() this=" << (void *)this << std::endl;
 }
 
 inline socket::~socket()
 {
+    std::cout << "socket::~socket() this=" << (void *)this << std::endl;
     if (multiplexer)
     {
         multiplexer->remove(this);
