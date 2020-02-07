@@ -12,8 +12,8 @@ class session : public std::enable_shared_from_this<session>
     using message_type = std::vector<char>;
 
 public:
-    session(std::shared_ptr<trial::datagram::socket> socket)
-        : socket(socket)
+    session(trial::datagram::socket&& socket)
+        : socket(std::move(socket))
     {
     }
 
@@ -25,13 +25,13 @@ public:
 private:
     void do_receive()
     {
-        assert(socket);
         auto self(shared_from_this());
         std::shared_ptr<message_type> message = std::make_shared<message_type>(1400);
-        socket->async_receive(boost::asio::buffer(*message),
+        socket.async_receive(boost::asio::buffer(*message),
                               [self, message] (boost::system::error_code error,
                                                std::size_t length)
                               {
+                                  std::cout << "do_receive: received=" << message << std::endl;
                                   if (!error)
                                   {
                                       // Echo the message
@@ -43,9 +43,8 @@ private:
     void do_send(std::shared_ptr<message_type> message,
                  std::size_t length)
     {
-        assert(socket);
         auto self(shared_from_this());
-        socket->async_send(boost::asio::buffer(*message, length),
+        socket.async_send(boost::asio::buffer(*message, length),
                            [self, message] (boost::system::error_code error,
                                             std::size_t)
                            {
@@ -57,7 +56,7 @@ private:
     }
 
 private:
-    std::shared_ptr<trial::datagram::socket> socket;
+    trial::datagram::socket socket;
 };
 
 class server
@@ -77,17 +76,19 @@ public:
 private:
     void do_accept()
     {
-        auto socket = std::make_shared<trial::datagram::socket>(trial::net::extension::get_executor(acceptor));
-        acceptor.async_accept(*socket,
-                              [this, socket] (boost::system::error_code error)
+        std::cout << "Accepting..." << std::endl;
+        acceptor.async_accept([this] (boost::system::error_code error, trial::datagram::socket socket)
                               {
                                   if (!error)
                                   {
+                                      std::cout << "async_echo_server: Accepted" << std::endl;
                                       // Session will keep itself alive as long as required
-                                      std::make_shared<session>(socket)->start();
+                                      std::make_shared<session>(std::move(socket))->start();
                                       do_accept();
+
                                   }
                               });
+
     }
 
 private:
